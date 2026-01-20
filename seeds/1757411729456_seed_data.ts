@@ -4,6 +4,7 @@ import type { Kysely } from "kysely";
 
 export async function seed(db: Kysely<DB>): Promise<void> {
   await db.deleteFrom("playlists_songs").execute();
+  await db.deleteFrom("user_liked_songs").execute();
   await db.deleteFrom("playlists").execute();
   await db.deleteFrom("songs").execute();
   await db.deleteFrom("albums").execute();
@@ -108,6 +109,7 @@ export async function seed(db: Kysely<DB>): Promise<void> {
           user_id: user.id,
         })
         .execute();
+        
     }
   }
 
@@ -131,6 +133,30 @@ export async function seed(db: Kysely<DB>): Promise<void> {
           song_id: songId,
         })
         .execute();
+    }
+  }
+
+    for (const user of users) {
+    const numLikedSongs = faker.number.int({
+      min: user.id === 1 ? 2 : 0,
+      max: 20,
+    });
+
+    const randomSongIds = faker.helpers.arrayElements(songIds, {
+      min: 0,
+      max: Math.min(numLikedSongs, songIds.length),
+    });
+
+    for (const songId of randomSongIds) {
+      console.log(songId)
+      await db
+        .insertInto("user_liked_songs")
+        .values({
+          user_id: user.id,
+          song_id: songId ,
+        })
+        .execute();
+        
     }
   }
 }

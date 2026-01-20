@@ -1,6 +1,7 @@
 import { getDb } from "@/lib/db";
 import Link from "next/link";
 import { AddSongToPlaylistButton } from "./AddSongToPlaylistButton";
+import { LikeSongButton } from "./LikeSongButton";
 
 function formatDuration(duration: number): string {
   const minutes = Math.floor(duration / 60);
@@ -71,6 +72,7 @@ export default async function AlbumDetail({
                 <th>Title</th>
                 <th>Duration</th>
                 <th>Actions</th>
+                <th>Like</th>
               </tr>
             </thead>
             <tbody>
@@ -84,6 +86,9 @@ export default async function AlbumDetail({
                       playlists={playlists}
                       songId={song.id}
                     />
+                  </td>
+                  <td>
+                    <LikeSongButton songId={song.id}></LikeSongButton>
                   </td>
                 </tr>
               ))}
