@@ -14,6 +14,9 @@
     "db:codegen": "kysely-codegen --url db.sqlite --out-file src/lib/db-types.ts"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.1.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@fortawesome/react-fontawesome": "^3.1.1",
     "better-sqlite3": "^12.2.0",
     "kysely": "^0.28.5",
     "next": "15.5.2",
