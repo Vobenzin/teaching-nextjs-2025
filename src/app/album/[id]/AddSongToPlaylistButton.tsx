@@ -10,7 +10,7 @@ export function AddSongToPlaylistButton(props: {
   const detailsRef = useRef<HTMLDetailsElement | null>(null);
 
   return (
-    <details className="dropdown" name="add-song-to-playlist" ref={detailsRef}>
+    <details className="dropdown dropdown-top dropdown-end" name="add-song-to-playlist" ref={detailsRef}>
       <summary className="btn btn-xs m-1">Add</summary>
 
       <ul className="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">

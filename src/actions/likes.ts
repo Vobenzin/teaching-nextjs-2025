@@ -27,6 +27,19 @@ export async function likeSong(songId: number) {
   revalidatePath("/");
 }
 
+export async function isLikeSong(songId: number) {
+  const db = getDb();
+  
+  const alreadyIn = await db
+    .selectFrom("user_liked_songs")
+    .where("user_id", "=", 1)
+    .where("song_id", "=", songId)
+    .executeTakeFirst();
+
+  return alreadyIn != undefined ? true : false
+
+}
+
 export async function removeLikeFromSong(
   songId: number | null
 ) {
