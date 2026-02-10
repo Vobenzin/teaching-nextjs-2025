@@ -1,11 +1,10 @@
 "use client"
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlay, faPause, faStepBackward, faStepForward } from "@fortawesome/free-solid-svg-icons";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { LikeSongQueueButton } from "./LikeSongQueueButton";
-import { LikeSongButton } from "./album/[id]/LikeSongButton";
 import { AddSongToPlaylistButton } from "./album/[id]/AddSongToPlaylistButton";
+import { toggleEnd, toggleSkip, toggleStart } from "@/actions/playback";
+
 
 interface Song{
   id: number;
@@ -30,7 +29,6 @@ export default function PlaybackBar(props : {initialSongs : Song[], playlists : 
   const[currentQueueId, setCurrentQueueId] = useState(0)
   const [currentSong, setCurrentSong] = useState<Song | null>(queue[currentQueueId])
 
-  const[isLiked, setIsLiked] = useState(false);
   const[isToggle, setIsToggle] = useState(false);
   
   const [progress, setProgress] = useState(0) ;
@@ -63,12 +61,38 @@ export default function PlaybackBar(props : {initialSongs : Song[], playlists : 
     }
   }
 
-  function NextSong(){
-    if (currentQueueId + 1 != queue.length){
-      setCurrentQueueId(currentQueueId + 1)
+  function PrevSong(){
+    if (progress != 0 ){
+      pausePlayback()
+      ResetDuration()
+    }
+
+    else if (currentQueueId != 0){
+      setCurrentQueueId(currentQueueId - 1)
       setCurrentSong(queue[currentQueueId])
       setProgress(0);
       setIsPlaying(true);
+    }
+    
+  }
+
+  function NextSong(){
+    if (currentQueueId + 1 != queue.length){
+      toggleSkip(currentSong.id)
+      setCurrentQueueId(currentQueueId + 1)
+      setCurrentSong(queue[currentQueueId])
+      ResetDuration()
+      setIsPlaying(true);
+    }
+    
+  }
+  function NextSongPure(){
+    if (currentQueueId + 1 != queue.length){
+      setCurrentQueueId(currentQueueId + 1)
+      setCurrentSong(queue[currentQueueId])
+      ResetDuration()
+      setIsPlaying(true);
+      
     }
     
   }
@@ -93,10 +117,12 @@ export default function PlaybackBar(props : {initialSongs : Song[], playlists : 
       const newProgress = playbackStart.progressAtStart + elapsed;
 
       if (newProgress >= currentSong.duration) {
+        toggleEnd(currentSong.id)
         setProgress(currentSong.duration);
         setIsPlaying(false);
         setPlaybackStart(null);
-        NextSong();
+        NextSongPure();
+        toggleStart(currentSong.id)
       } else {
         setProgress(newProgress);
       }
@@ -130,7 +156,7 @@ export default function PlaybackBar(props : {initialSongs : Song[], playlists : 
 
       <div className="flex flex-col items-center gap-1 flex-1 max-w-xl">
         <div className="flex items-center gap-2">
-          <button className="btn btn-circle btn-sm btn-ghost" onClick={ResetDuration}>
+          <button className="btn btn-circle btn-sm btn-ghost" onClick={PrevSong}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -198,7 +224,7 @@ export default function PlaybackBar(props : {initialSongs : Song[], playlists : 
               L 12,10
             "
           />
-        </svg></button>) :(<button className="btn btn-circle btn-sm btn-ghost" onClick={NextSong}><svg viewBox="0 0 16 16" className="color_red">
+        </svg></button>) :(<button className="btn btn-circle btn-sm btn-ghost" onClick={togglePlayback}><svg viewBox="0 0 16 16" className="color_red">
           <path
             d="
               M 12,4
