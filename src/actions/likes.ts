@@ -3,23 +3,16 @@
 import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { get_id } from "./login";
 
 
 export async function likeSong(songId: number) {
   const db = getDb();
-
-  // const alreadyIn = await db
-  //   .selectFrom("user_liked_songs")
-  //   .where("user_id", "=", 1)
-  //   .where("song_id", "=", songId)
-  //   .executeTakeFirst();
-  // if (alreadyIn != undefined){
-  //   return
-  // }
+  const user_id = await get_id();
   await db
     .insertInto("user_liked_songs")
     .values({
-      user_id: 1,
+      user_id: user_id,
       song_id: songId,
     })
     .execute();
@@ -29,10 +22,10 @@ export async function likeSong(songId: number) {
 
 export async function isLikeSong(songId: number) {
   const db = getDb();
-  
+  const user_id = await get_id();
   const alreadyIn = await db
     .selectFrom("user_liked_songs")
-    .where("user_id", "=", 1)
+    .where("user_id", "=", user_id)
     .where("song_id", "=", songId)
     .executeTakeFirst();
 
@@ -45,10 +38,10 @@ export async function removeLikeFromSong(
 ) {
   console.log(`Removing Like from song ${songId}`);
   const db = getDb();
-
+  const user_id = await get_id();
   await db
     .deleteFrom("user_liked_songs")
-    .where("user_id", "=", 1)
+    .where("user_id", "=", user_id)
     .where("song_id", "=", songId)
     .execute();
 

@@ -1,14 +1,16 @@
 import { getDb } from "@/lib/db";
 import Link from "next/link";
 import { CreatePlaylistButton } from "./CreatePlaylistButton";
+import { get_id } from "@/actions/login";
 
 export default async function PlaylistsPage() {
   const db = getDb();
+  const user_id = await get_id();
 
   const playlists = await db
     .selectFrom("playlists")
     .selectAll()
-    .where("user_id", "=", 1)
+    .where("user_id", "=", user_id)
     .execute();
 
   return (

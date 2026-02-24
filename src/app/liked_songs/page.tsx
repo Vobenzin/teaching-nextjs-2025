@@ -1,9 +1,11 @@
 import { getDb } from "@/lib/db";
 import { RemoveLikeFromSong } from "./RemoveLikeFromSong";
+import { get_id } from "@/actions/login";
 
 
 export default async function PlaylistsPage() {
   const db = getDb();
+  const  user_id = await get_id();
 
   const liked_songs = await db
     .selectFrom("user_liked_songs")    
@@ -18,7 +20,7 @@ export default async function PlaylistsPage() {
       "albums.name as album_name",
       "authors.name as author_name",
     ])
-    .where("user_id", "=", 1)
+    .where("user_id", "=", user_id)
     .execute();
 
   return (

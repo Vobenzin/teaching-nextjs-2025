@@ -4,6 +4,7 @@ import "./globals.css";
 import { NavBar } from "./NavBar";
 import PlaybackBar from "./PlaybackBar";
 import { getDb } from "@/lib/db";
+import { get_id } from "@/actions/login";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,6 +27,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const db = getDb()
+  const user_id = await get_id()
 
   const randomSongs = await db
   .selectFrom("songs")
@@ -38,7 +40,7 @@ export default async function RootLayout({
   const playlists = await db
     .selectFrom("playlists")
     .selectAll()
-    .where("user_id", "=", 1)
+    .where("user_id", "=", user_id)
     .execute();
 
   return (

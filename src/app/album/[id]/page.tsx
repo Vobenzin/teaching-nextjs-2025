@@ -2,6 +2,7 @@ import { getDb } from "@/lib/db";
 import Link from "next/link";
 import { AddSongToPlaylistButton } from "./AddSongToPlaylistButton";
 import { LikeSongButton } from "./LikeSongButton";
+import { get_id } from "@/actions/login";
 
 function formatDuration(duration: number): string {
   const minutes = Math.floor(duration / 60);
@@ -16,6 +17,7 @@ export default async function AlbumDetail({
   params: Promise<{ id: string }>;
 }) {
   const db = getDb();
+  const user_id = await get_id();
 
   const { id } = await params;
 
@@ -54,7 +56,7 @@ export default async function AlbumDetail({
   const playlists = await db
     .selectFrom("playlists")
     .selectAll()
-    .where("user_id", "=", 1)
+    .where("user_id", "=", user_id)
     .execute();
 
   return (

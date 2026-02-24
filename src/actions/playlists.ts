@@ -3,9 +3,11 @@
 import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { get_id } from "./login";
 
 export async function createPlaylist(formData: FormData) {
   const playlistName = formData.get("playlistName");
+  const user_id = await get_id();
 
   if (playlistName == null) {
     throw new Error("Playlist name missing");
@@ -23,7 +25,7 @@ export async function createPlaylist(formData: FormData) {
     .insertInto("playlists")
     .values({
       name: playlistNameStr,
-      user_id: 1,
+      user_id: user_id,
     })
     .returningAll()
     .executeTakeFirstOrThrow();
