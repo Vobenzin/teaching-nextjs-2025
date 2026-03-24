@@ -1,17 +1,9 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react";
+import { AddSongToPlaylistButton } from "@/app/album/[id]/AddSongToPlaylistButton";
+import { useContext } from "react";
+import { PlaybackContext, Song } from "./playback-context";
 import { LikeSongQueueButton } from "./LikeSongQueueButton";
-import { AddSongToPlaylistButton } from "./album/[id]/AddSongToPlaylistButton";
-import { toggleEnd, toggleSkip, toggleStart } from "@/actions/playback";
-
-
-interface Song{
-  id: number;
-  name: string;
-  author: string;
-  duration: number;
-}
 
 function formatDuration(duration: number): string {
   const minutes = Math.floor(duration / 60);
@@ -20,125 +12,31 @@ function formatDuration(duration: number): string {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
-export default function PlaybackBar(props : {initialSongs : Song[], playlists : { id: number; name: string }[]}){
-  const playlists = props.playlists;
-  const [queue, setQueue] = useState<Song[]>(props.initialSongs)
-  
-  const [isPlaying, setIsPlaying ] = useState(false) ;
-  
-  const[currentQueueId, setCurrentQueueId] = useState(0)
-  const [currentSong, setCurrentSong] = useState<Song | null>(queue[currentQueueId])
-
-  const[isToggle, setIsToggle] = useState(false);
-  
-  const [progress, setProgress] = useState(0) ;
-  const [playbackStart, setPlaybackStart] = useState<{
-    timestamp: number;
-    progressAtStart: number;
-  } | null>(null);
-
-
-  function startPlayback() {
-    setPlaybackStart({
-      timestamp: Date.now(),
-      progressAtStart: progress,
-    });
-    setIsPlaying(true);
-  }
-
-  function pausePlayback() {
-    setIsPlaying(false);
-    setPlaybackStart(null);
-  }
-
-  function seekTo(newProgress: number) {
-    setProgress(newProgress);
-    if (isPlaying) {
-      setPlaybackStart({
-        timestamp: Date.now(),
-        progressAtStart: newProgress,
-      });
-    }
-  }
-
-  function PrevSong(){
-    if (progress != 0 ){
-      pausePlayback()
-      ResetDuration()
-    }
-
-    else if (currentQueueId != 0){
-      setCurrentQueueId(currentQueueId - 1)
-      setCurrentSong(queue[currentQueueId])
-      setProgress(0);
-      setIsPlaying(true);
-    }
-    
-  }
-
-  function NextSong(){
-    if (currentQueueId + 1 != queue.length){
-      toggleSkip(currentSong.id)
-      setCurrentQueueId(currentQueueId + 1)
-      setCurrentSong(queue[currentQueueId])
-      ResetDuration()
-      setIsPlaying(true);
-    }
-    
-  }
-  function NextSongPure(){
-    if (currentQueueId + 1 != queue.length){
-      setCurrentQueueId(currentQueueId + 1)
-      setCurrentSong(queue[currentQueueId])
-      ResetDuration()
-      setIsPlaying(true);
-      
-    }
-    
-  }
-  function ResetDuration(){
-    setProgress(0);
-    seekTo(0);
-    
-  }
-  function togglePlayback() {
-    if (isPlaying) {
-      pausePlayback();
-    } else {
-      startPlayback();
-    }
-  }
-
-  useEffect(() => {
-    if (!isPlaying || currentSong == null || playbackStart == null) return;
-
-    const interval = setInterval(() => {
-      const elapsed = (Date.now() - playbackStart.timestamp) / 1000;
-      const newProgress = playbackStart.progressAtStart + elapsed;
-
-      if (newProgress >= currentSong.duration) {
-        toggleEnd(currentSong.id)
-        setProgress(currentSong.duration);
-        setIsPlaying(false);
-        setPlaybackStart(null);
-        NextSongPure();
-        toggleStart(currentSong.id)
-      } else {
-        setProgress(newProgress);
-      }
-    }, 100);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [isPlaying, currentSong, playbackStart]);
+export function PlaybackBar(props: {
+  initialSongs: Song[];
+  likedSongIds: number[];
+  playlists: { id: number; name: string }[];
+}) {
+  const {
+    isPlaying,
+    progress,
+    isShuffled,
+    isRepeat,
+    currentSong,
+    togglePlayback,
+    seekTo,
+    handleNext,
+    handleBack,
+    toggleShuffle,
+    toggleRepeat,
+  } = useContext(PlaybackContext);
 
   const duration = currentSong?.duration || 0;
-  const remaining = duration - progress;
+  const currentProgress = Math.floor(progress);
+  const currentRemaining = duration - currentProgress;
 
   return (
-    <div className="h-24 fixed bottom-0 left-0 right-0 bg-base-100 shadow-sm text-center align-middle">
-<div className="flex items-center justify-between h-full pl-16 pr-4">
+    <div className="flex items-center justify-between h-full pl-16 pr-4">
       <div className="flex items-center gap-3 w-48 min-w-48">
         {currentSong ? (
           <div className="flex flex-col min-w-0">
@@ -156,7 +54,10 @@ export default function PlaybackBar(props : {initialSongs : Song[], playlists : 
 
       <div className="flex flex-col items-center gap-1 flex-1 max-w-xl">
         <div className="flex items-center gap-2">
-          <button className="btn btn-circle btn-sm btn-ghost" onClick={PrevSong}>
+          <button
+            className="btn btn-circle btn-sm btn-ghost"
+            onClick={handleBack}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -200,7 +101,10 @@ export default function PlaybackBar(props : {initialSongs : Song[], playlists : 
             )}
           </button>
 
-          <button className="btn btn-circle btn-sm btn-ghost" onClick={NextSong}>
+          <button
+            className="btn btn-circle btn-sm btn-ghost"
+            onClick={handleNext}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -210,58 +114,89 @@ export default function PlaybackBar(props : {initialSongs : Song[], playlists : 
               <path d="M5.055 7.06c-1.25-.714-2.805.189-2.805 1.628v8.123c0 1.44 1.555 2.342 2.805 1.628L12 14.471v2.34c0 1.44 1.555 2.342 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256L14.805 7.06C13.555 6.346 12 7.25 12 8.688v2.34L5.055 7.06z" />
             </svg>
           </button>
-          {currentSong ? (
-          <LikeSongQueueButton songId={currentSong?.id}></LikeSongQueueButton>
-          ):(<></>)}
-          {currentSong ? (<AddSongToPlaylistButton playlists={playlists} songId={currentSong?.id}></AddSongToPlaylistButton>):(<></>)}
-          {isToggle ? ( <button className="btn btn-circle btn-sm btn-ghost" onClick={NextSong}><svg viewBox="0 0 16 16">
-          <path
-            d="
-              M 12,4
-              L 4,12
-              M 6,4
-              L 12,4
-              L 12,10
-            "
-          />
-        </svg></button>) :(<button className="btn btn-circle btn-sm btn-ghost" onClick={togglePlayback}><svg viewBox="0 0 16 16" className="color_red">
-          <path
-            d="
-              M 12,4
-              L 4,12
-              M 6,4
-              L 12,4
-              L 12,10
-            "
-          />
-        </svg></button>)}
 
-
-
-          {/* {currentSong ? (
-          // <LikeSongQueueButton songId={currentSong?.id}></LikeSongQueueButton>):(<></>)} */}
+          <label
+            className={`swap btn btn-circle btn-sm btn-ghost ${isShuffled ? "btn-active" : ""}`}
+          >
+            <input
+              type="checkbox"
+              checked={isShuffled}
+              onChange={toggleShuffle}
+            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="swap-off w-4 h-4"
+            >
+              <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.18 1.42-1.42zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+            </svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="swap-on w-4 h-4 text-primary"
+            >
+              <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.18 1.42-1.42zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+            </svg>
+          </label>
+          <label
+            className={`swap btn btn-circle btn-sm btn-ghost ${isRepeat ? "btn-active" : ""}`}
+          >
+            <input
+              type="checkbox"
+              checked={isRepeat}
+              onChange={toggleRepeat}
+            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="swap-off w-4 h-4"
+            >
+              <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.18 1.42-1.42zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+            </svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="swap-on w-4 h-4 text-primary"
+            >
+              <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.18 1.42-1.42zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+            </svg>
+          </label>
         </div>
 
         <div className="flex items-center gap-2 w-full">
           <span className="text-xs text-gray-500 w-10 text-right">
-            {formatDuration(progress)}
+            {formatDuration(currentProgress)}
           </span>
           <input
             type="range"
             min={0}
             max={duration}
-            value={progress}
+            value={currentProgress}
             onChange={(e) => seekTo(Number(e.target.value))}
             className="range range-xs flex-1 cursor-pointer"
           />
           <span className="text-xs text-gray-500 w-10">
-            -{formatDuration(remaining)}
+            -{formatDuration(currentRemaining)}
           </span>
         </div>
       </div>
-      <div className="w-48 min-w-48"></div>
+      <div className="w-48 min-w-48 flex items-center justify-end gap-2">
+        {currentSong && (
+          <>
+            <LikeSongQueueButton
+              songId={currentSong.id}
+            />
+            <AddSongToPlaylistButton
+              songId={currentSong.id}
+              playlists={props.playlists}
+            />
+          </>
+        )}
+      </div>
     </div>
-    </div>
-    
   );
 }

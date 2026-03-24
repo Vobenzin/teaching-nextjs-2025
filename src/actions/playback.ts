@@ -3,57 +3,51 @@
 import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { get_id } from "./login";
-export async function toggleStart(song_id: number) {
+
+export async function recordPlaybackStart(songId: number) {
+  const userId = await get_id();
 
   const db = getDb();
-  const user_id = await get_id()
-
-  const newEvent = await db
+  await db
     .insertInto("playback_events")
     .values({
+      user_id: userId,
       event_name: "playback_start",
+      song_id: songId,
       event_data: Date.now(),
-      user_id: user_id,
-      song_id: song_id
     })
-    .returningAll()
-    .executeTakeFirstOrThrow();
+    .execute();
   revalidatePath("/history");
 }
 
-
-export async function toggleSkip(song_id: number) {
-
-  const db = getDb();
-  const user_id = await get_id()
-  const newEvent = await db
-    .insertInto("playback_events")
-    .values({
-      event_name: "playback_skip",
-      event_data: Date.now(),
-      user_id: user_id,
-      song_id: song_id
-    })
-    .returningAll()
-    .executeTakeFirstOrThrow();
-  revalidatePath("/history");
-}
-
-
-export async function toggleEnd(song_id: number) {
+export async function recordPlaybackEnd(songId: number) {
+  const userId = await get_id();
 
   const db = getDb();
-  const user_id = await get_id()
-  const newEvent = await db
+  await db
     .insertInto("playback_events")
     .values({
+      user_id: userId,
       event_name: "playback_end",
+      song_id: songId,
       event_data: Date.now(),
-      user_id: user_id,
-      song_id: song_id
     })
-    .returningAll()
-    .executeTakeFirstOrThrow();
+    .execute();
+  revalidatePath("/history");
+}
 
+export async function recordPlaybackSkip(songId: number) {
+  const userId = await get_id();
+
+  const db = getDb();
+  await db
+    .insertInto("playback_events")
+    .values({
+      user_id: userId,
+      event_name: "playback_skip",
+      song_id: songId,
+      event_data: Date.now(),
+    })
+    .execute();
   revalidatePath("/history");
 }

@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NavBar } from "./NavBar";
-import PlaybackBar from "./PlaybackBar";
+import {PlaybackBar} from "./PlaybackBar";
 import { getDb } from "@/lib/db";
 import { get_id } from "@/actions/login";
+import { PlaybackContextProvider } from "./playbackContextProvider";
+import { SideBar } from "./sideBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +39,15 @@ export default async function RootLayout({
   .limit(10)
   .execute();
 
+    const likedSongIds =
+    user_id != null
+      ? await db
+          .selectFrom("user_liked_songs")
+          .where("user_id", "=", user_id)
+          .select("song_id")
+          .execute()
+      : null;
+
   const playlists = await db
     .selectFrom("playlists")
     .selectAll()
@@ -52,11 +63,28 @@ export default async function RootLayout({
 
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
 
-        {children}
-        <div className=" fixed top-0 left-0 right-0">
-          <NavBar />
-        </div>
-      <PlaybackBar initialSongs = {randomSongs} playlists = {playlists}></PlaybackBar>
+
+        <PlaybackContextProvider initialSongs={randomSongs}>
+          <div className="pb-4">{children}</div>
+          
+          <div className="fixed top-0 left-0 right-0">
+            <NavBar />
+          </div>
+          <div className="fixed top-0 bottom-0 right-0 pt-20 w-40">
+            <SideBar />
+          </div>
+
+          {likedSongIds != null && playlists != null ? (
+            <div className="fixed h-24 bg-base-100 bottom-0 left-0 right-0 inset-shadow-sm">
+              <PlaybackBar
+                initialSongs={randomSongs}
+                likedSongIds={likedSongIds.map((row) => row.song_id)}
+                playlists={playlists}
+              />
+            </div>
+          ) : null}
+        </PlaybackContextProvider>
+        
       
       </main>
       
