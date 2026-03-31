@@ -15,12 +15,16 @@
             "name": "Local",
             "driver": "sqlite",
             "connectionType": "socket",
-            "socket": "app/db.sqlite",
+            "socket": "teaching-nextjs-2025/db.sqlite",
             "readOnly": false,
+            "postConnectionSqlType": "inline",
             "driverOptions": {
                 "extensions": []
             },
-            "idleTimeout": 0
+            "idleTimeout": 0,
+            "introspection": {
+                "progressive": false
+            }
         }
     ],
     "sqltools.useNodeRuntime": true

@@ -36,6 +36,15 @@ function shuffleIndices(length: number, excludeIndex: number): number[] {
   }
   return [excludeIndex, ...indices];
 }
+function handleRemoveFromQueue(prev: PlaybackStatus): PlaybackStatus {
+
+    return { ...prev, 
+      isPlaying: false, 
+      playbackStart: null};
+
+
+}
+
 
 function handleNextPlaybackStatus(prev: PlaybackStatus): PlaybackStatus {
   if (prev.isShuffled) {

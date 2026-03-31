@@ -11,6 +11,7 @@ export function SideBar() {
     <div>
       SideBar Inner:
       <div>currentSong: {currentSong?.name}</div>
+      
       <br />
       <div>
         Song Queue:
