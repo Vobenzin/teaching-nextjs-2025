@@ -22,6 +22,12 @@ export interface Authors {
   name: string;
 }
 
+export interface FollowingAuthors {
+  author_id: number;
+  id: Generated<number>;
+  user_id: number;
+}
+
 export interface PlaybackEvents {
   event_data: number | null;
   event_name: string | null;
@@ -65,6 +71,7 @@ export interface Users {
 export interface DB {
   albums: Albums;
   authors: Authors;
+  following_authors: FollowingAuthors;
   playback_events: PlaybackEvents;
   playlists: Playlists;
   playlists_songs: PlaylistsSongs;

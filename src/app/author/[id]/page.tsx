@@ -1,3 +1,7 @@
+import { isFollowingAuthor } from "@/actions/follow";
+import { get_id } from "@/actions/login";
+import { FollowAuthor } from "@/app/following_authors/FollowAuthor";
+import { UnfollowAuthor } from "@/app/following_authors/UnfollowAuthor";
 import { getDb } from "@/lib/db";
 import Link from "next/link";
 
@@ -7,6 +11,7 @@ export default async function AuthorDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const db = getDb();
+  const  user_id = await get_id();
 
   const { id } = await params;
 
@@ -34,21 +39,39 @@ export default async function AuthorDetailPage({
     .where("author_id", "=", author.id)
     .execute();
 
+  const follow_author_list = await db
+    .selectFrom("following_authors")
+    .selectAll()
+    .where("author_id", "=", author.id)
+    .where("user_id", "=", user_id)
+    .execute();
+  
+    console.log(follow_author_list)
+
   return (
     <>
-        <div>Name: {author.name}</div>
-        <div>Bio: {author.bio}</div>
+        <p className="text-2xl font-bold">Name: {author.name}</p>
+        {follow_author_list.length != 0 ? (<UnfollowAuthor author_id={author.id}></UnfollowAuthor>) : (<FollowAuthor author_id={author.id}></FollowAuthor>)}
+        
+        
+        <p className="text-2l font-bold">Bio: {author.bio}</p>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+            </tr>
 
-        <div>
-          Albums:
-          <ul>
-            {albums.map((album) => (
-              <li key={album.id}>
-                <Link href={`/album/${album.id}`}>{album.name}</Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+          </thead>
+          <tbody>
+
+          
+          {albums.map((album) => (
+            <tr className="list-disc" key={album.id}>
+              <td><Link href={`/album/${album.id}`}>{album.name}</Link></td>
+            </tr>
+          ))}
+          </tbody>
+        </table>
     </>
   );
 }

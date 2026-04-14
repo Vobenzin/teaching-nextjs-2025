@@ -6,6 +6,7 @@ export async function seed(db: Kysely<DB>): Promise<void> {
   await db.deleteFrom("playlists_songs").execute();
   await db.deleteFrom("user_liked_songs").execute();
   await db.deleteFrom("playback_events").execute();
+  await db.deleteFrom("following_authors").execute();
   await db.deleteFrom("playlists").execute();
   await db.deleteFrom("songs").execute();
   await db.deleteFrom("albums").execute();
@@ -143,9 +144,21 @@ export async function seed(db: Kysely<DB>): Promise<void> {
       max: 20,
     });
 
+    const numFollowingAuthors = faker.number.int({
+      min: user.id === 1 ? 2 : 0,
+      max: 10,
+    });
+
+    const authorIds = authors.map((author) => author.id)
+
     const randomSongIds = faker.helpers.arrayElements(songIds, {
       min: 0,
       max: Math.min(numLikedSongs, songIds.length),
+    });
+
+    const randomFollowAuthorIds = faker.helpers.arrayElements(authorIds, {
+      min: 0,
+      max: Math.min(numFollowingAuthors, authorIds.length),
     });
 
     for (const songId of randomSongIds) {
@@ -158,6 +171,19 @@ export async function seed(db: Kysely<DB>): Promise<void> {
         .execute();
         
     }
+
+    for (const authorId of randomFollowAuthorIds) {
+      await db
+        .insertInto("following_authors")
+        .values({
+          user_id: user.id,
+          author_id: authorId
+        })
+        .execute();
+        
+    }
+
+
     for (const songId of randomSongIds) {
       const vals = ["playback_end","playback_start"]
       const index = faker.number.int({min: 0,max: 1})
